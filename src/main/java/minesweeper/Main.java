@@ -1,28 +1,49 @@
 package minesweeper;
 
+import java.util.Scanner;
+import java.util.Random;
+
 public class Main {
 
     public static void main(String[] args) {
-        Map gameMap = new Map(9, 9);
-        gameMap.setMine();
+
+        Scanner stdIn = new Scanner(System.in);
+
+        System.out.print("How many mines do you want on the field?");
+        final int mineCount = stdIn.nextInt();
+
+        Map gameMap = new Map();
+
+        gameMap.setRandomMines(mineCount);
         gameMap.print();
     }
 }
 
 class Map {
+    static final int mapRows = 9;
+    static final int mapColumns = 9;
+    static final int cellCount = mapRows * mapColumns;
+
     private char[][] charMatrix;
 
-    Map(int rows, int columns) {
-        charMatrix = new char[rows][columns];
-        for (int i=0; i<rows; i++) {
-            for (int j=0; j<columns; j++) {
+    Map() {
+        charMatrix = new char[mapRows][mapColumns];
+        for (int i=0; i<mapRows; i++) {
+            for (int j=0; j<mapColumns; j++) {
                 charMatrix[i][j] = '.';
             }
         }
     }
 
-    void setMine() {
-        charMatrix[0][0] = 'X';
+    void setRandomMines(int mineCount) {
+        Random randomGenerator = new Random();
+
+        for(int i=0; i<mineCount; i++) {
+            final int mineIndex = randomGenerator.nextInt(mineCount);
+            final int mineRow = mineIndex / mapColumns;
+            final int mineColumn = mineIndex % mapColumns;
+            charMatrix[mineRow][mineColumn] = 'X';
+        }
     }
 
     void print() {
