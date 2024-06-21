@@ -14,7 +14,7 @@ public class Main {
 
         System.out.print("How many mines do you want on the field?");
         final int mineCount = stdIn.nextInt();
-        gameMap.setRandomMines(mineCount);
+        gameMap.initializeMap(mineCount);
         gameMap.print();
 
     }
@@ -25,7 +25,7 @@ class GameMap {
     static final int mapColumns = 9;
     static final int cellCount = mapRows * mapColumns;
 
-    private char[][] charMatrix;
+    private final char[][] charMatrix;
 
     GameMap() {
         charMatrix = new char[mapRows][mapColumns];
@@ -36,9 +36,22 @@ class GameMap {
         }
     }
 
-    void setRandomMines(int mineCount) {
-        Random randomGenerator = new Random();
+    void print() {
+        for (char[] column: charMatrix) {
+            for (char letter: column) {
+                System.out.print(letter);
+            }
+            System.out.print("\n");
+        }
+    }
 
+    void initializeMap(int mineCount) {
+        setRandomMines(mineCount);
+        addDistanceHint();
+    }
+
+    private void setRandomMines(int mineCount) {
+        Random randomGenerator = new Random();
         Set<Integer> randomSet = new HashSet<>();
 
         while(randomSet.size() < mineCount) {
@@ -53,12 +66,10 @@ class GameMap {
         }
     }
 
-    void print() {
-        for (char[] column: charMatrix) {
-            for (char letter: column) {
-                System.out.print(letter);
-            }
-            System.out.print("\n");
-        }
+    private void addDistanceHint() {
+
     }
+
+
+
 }
