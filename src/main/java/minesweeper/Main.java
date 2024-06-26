@@ -1,56 +1,66 @@
 package minesweeper;
 
-import java.util.Scanner;
-import java.util.Random;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
 
         Scanner stdIn = new Scanner(System.in);
 
-        GameMap gameMap = new GameMap();
-
         System.out.print("How many mines do you want on the field?");
         final int mineCount = stdIn.nextInt();
-        gameMap.initializeMap(mineCount);
-        gameMap.print();
 
     }
 }
 
+class Cell {
+    private boolean containingMine;
+    private boolean revealed;
+    private int adjacentMineCount;
+
+    Cell(boolean containingMine, boolean revealed) {
+        this.containingMine = containingMine;
+        this.revealed = revealed;
+    }
+
+    boolean isContainingMine() { return containingMine; }
+    boolean isRevealed() { return revealed; }
+    int getAdjacentMineCount() { return adjacentMineCount; }
+    void setMineActive() { containingMine = true; }
+}
+
 class GameMap {
-    static final int mapRows = 9;
-    static final int mapColumns = 9;
-    static final int cellCount = mapRows * mapColumns;
 
-    private final char[][] charMatrix;
+    final int mapRows;
+    final int mapColumns;
+    final int cellCount;
 
-    GameMap() {
-        charMatrix = new char[mapRows][mapColumns];
+    private final Cell[][] cellMatrix;
+
+    GameMap(int mapRows, int mapColumns) {
+        this.mapRows = mapRows;
+        this.mapColumns = mapColumns;
+        this.cellCount = mapRows * mapColumns;
+
+        cellMatrix = new Cell[mapRows][mapColumns];
+
         for (int i=0; i<mapRows; i++) {
             for (int j=0; j<mapColumns; j++) {
-                charMatrix[i][j] = '.';
+                cellMatrix[i][j] = new Cell(false, true);
             }
         }
     }
 
-    void print() {
-        for (char[] column: charMatrix) {
-            for (char letter: column) {
-                System.out.print(letter);
+    void drawOnTerminal() {
+        for(final Cell[] cellRow : cellMatrix) {
+            for (final Cell cell : cellRow) {
+                System.out.print(cell.isContainingMine() ? "X" : ".");
             }
             System.out.print("\n");
         }
     }
 
-    void initializeMap(int mineCount) {
-        setRandomMines(mineCount);
-        addDistanceHint();
-    }
-
-    private void setRandomMines(int mineCount) {
+    void setRandomMines(int mineCount) {
         Random randomGenerator = new Random();
         Set<Integer> randomSet = new HashSet<>();
 
@@ -62,14 +72,22 @@ class GameMap {
         for(final int randomNum : randomSet) {
             final int mineRow = randomNum / mapColumns;
             final int mineColumn = randomNum % mapColumns;
-            charMatrix[mineRow][mineColumn] = 'X';
+            final Cell cellToChange = cellMatrix[mineRow][mineColumn];
+            cellToChange.setMineActive();
         }
     }
 
-    private void addDistanceHint() {
-
+    void logDebugMessage() {
+        for(final Cell[] cellRow : cellMatrix) {
+            System.out.print("{");
+            for (final Cell cell : cellRow) {
+                System.out.print(" [");
+                System.out.print(cell.isContainingMine() ? "X" : ".");
+                System.out.print(" ");
+                System.out.print(cell.isRevealed() ? "open" : "hidden");
+                System.out.print("] ");
+            }
+            System.out.print("}\n");
+        }
     }
-
-
-
 }
