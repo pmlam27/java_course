@@ -9,24 +9,38 @@ public class Main {
 
         System.out.print("How many mines do you want on the field?");
         final int mineCount = stdIn.nextInt();
-
+        GameMap gameMap = new GameMap(10, 10, 10);
+        gameMap.drawOnTerminal();
     }
 }
 
-class Cell {
-    private boolean containingMine;
-    private boolean revealed;
-    private int adjacentMineCount;
+interface Cell {
+    boolean isRevealed();
+}
 
-    Cell(boolean containingMine, boolean revealed) {
-        this.containingMine = containingMine;
+class MineCell implements Cell {
+    private boolean revealed;
+
+    MineCell(boolean revealed) {
         this.revealed = revealed;
     }
 
-    boolean isContainingMine() { return containingMine; }
-    boolean isRevealed() { return revealed; }
-    int getAdjacentMineCount() { return adjacentMineCount; }
-    void setMineActive() { containingMine = true; }
+    public boolean isRevealed() { return revealed; }
+}
+
+class EmptyCell implements Cell {
+    private boolean revealed;
+    private final int adjacentMineCount;
+
+    EmptyCell(boolean revealed, int adjacentMineCount) {
+        this.revealed = revealed;
+        this.adjacentMineCount = adjacentMineCount;
+    }
+
+    public boolean isRevealed() { return revealed; }
+    int getAdjacentMineCount() {
+        return adjacentMineCount;
+    }
 }
 
 class GameMap {
@@ -37,43 +51,44 @@ class GameMap {
 
     private final Cell[][] cellMatrix;
 
-    GameMap(int mapRows, int mapColumns) {
+    GameMap(int mapRows, int mapColumns, int mineCount) {
         this.mapRows = mapRows;
         this.mapColumns = mapColumns;
         this.cellCount = mapRows * mapColumns;
 
         cellMatrix = new Cell[mapRows][mapColumns];
 
+        // generate random mines
+        Set<Integer> randomSet = new HashSet<>();
+        Random randomGenerator = new Random();
+        while(randomSet.size() < mineCount) {
+            final int nextRandom = randomGenerator.nextInt(cellCount);
+            randomSet.add(nextRandom);
+        }
+        for(final int randomNum : randomSet) {
+            final int mineRow = randomNum / mapColumns;
+            final int mineColumn = randomNum % mapColumns;
+            cellMatrix[mineRow][mineColumn] = new MineCell(true);
+        }
+
+        // compute adjacent mine count and fill remaining with empty cell
         for (int i=0; i<mapRows; i++) {
             for (int j=0; j<mapColumns; j++) {
-                cellMatrix[i][j] = new Cell(false, true);
+                if (cellMatrix[i][j] != null) { continue; }
+
+
+                //cellMatrix[i][j] = new EmptyCell(true);
             }
         }
+
     }
 
     void drawOnTerminal() {
         for(final Cell[] cellRow : cellMatrix) {
             for (final Cell cell : cellRow) {
-                System.out.print(cell.isContainingMine() ? "X" : ".");
+                System.out.print((cell instanceof MineCell) ? "X" : ".");
             }
             System.out.print("\n");
-        }
-    }
-
-    void setRandomMines(int mineCount) {
-        Random randomGenerator = new Random();
-        Set<Integer> randomSet = new HashSet<>();
-
-        while(randomSet.size() < mineCount) {
-            final int nextRandom = randomGenerator.nextInt(cellCount);
-            randomSet.add(nextRandom);
-        }
-
-        for(final int randomNum : randomSet) {
-            final int mineRow = randomNum / mapColumns;
-            final int mineColumn = randomNum % mapColumns;
-            final Cell cellToChange = cellMatrix[mineRow][mineColumn];
-            cellToChange.setMineActive();
         }
     }
 
@@ -81,11 +96,12 @@ class GameMap {
         for(final Cell[] cellRow : cellMatrix) {
             System.out.print("{");
             for (final Cell cell : cellRow) {
-                System.out.print(" [");
-                System.out.print(cell.isContainingMine() ? "X" : ".");
+
                 System.out.print(" ");
-                System.out.print(cell.isRevealed() ? "open" : "hidden");
-                System.out.print("] ");
+                System.out.print(cell.isRevealed() ? " " : "H");
+                System.out.print(" ");
+                System.out.print((cell instanceof MineCell) ? "M" : "[]");
+                System.out.print("\t");
             }
             System.out.print("}\n");
         }
