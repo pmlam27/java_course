@@ -9,8 +9,18 @@ public class Main {
 
         System.out.print("How many mines do you want on the field?");
         final int mineCount = stdIn.nextInt();
-        GameMap gameMap = new GameMap(10, 10, 10);
+        GameMap gameMap = new GameMap(9, 9, mineCount);
         gameMap.drawOnTerminal();
+    }
+}
+
+class Displacement {
+    final int row;
+    final int column;
+
+    Displacement(int row, int column) {
+        this.row = row;
+        this.column = column;
     }
 }
 
@@ -72,12 +82,38 @@ class GameMap {
         }
 
         // compute adjacent mine count and fill remaining with empty cell
-        for (int i=0; i<mapRows; i++) {
-            for (int j=0; j<mapColumns; j++) {
-                if (cellMatrix[i][j] != null) { continue; }
 
+        Displacement[] AdjacentDisplacements = {
+                new Displacement(1, 1),
+                new Displacement(1, 0),
+                new Displacement(1, -1),
+                new Displacement(0, 1),
+                new Displacement(0, -1),
+                new Displacement(-1, 1),
+                new Displacement(-1, 0),
+                new Displacement(-1, -1),
+        };
 
-                //cellMatrix[i][j] = new EmptyCell(true);
+        for (int rowIndex=0; rowIndex < mapRows; rowIndex++) {
+            for (int columnIndex=0; columnIndex < mapColumns; columnIndex++) {
+                if (cellMatrix[rowIndex][columnIndex] != null) { continue; }
+
+                int adjacentMineCounter = 0;
+                for (Displacement displacement : AdjacentDisplacements) {
+                    int newRowIndex = rowIndex + displacement.row;
+                    int newColumnIndex = columnIndex + displacement.column;
+                    boolean adjacentPositionOutOfScope =    (newRowIndex > mapRows-1) || (newRowIndex < 0) ||
+                                                            (newColumnIndex > mapColumns-1) || (newColumnIndex < 0);
+                    if (adjacentPositionOutOfScope) { continue; }
+
+                    Cell validAdjacentCell = cellMatrix[newRowIndex][newColumnIndex];
+                    if(validAdjacentCell == null) { continue; }
+
+                    if (validAdjacentCell instanceof MineCell) {
+                        adjacentMineCounter++;
+                    }
+                }
+                cellMatrix[rowIndex][columnIndex] = new EmptyCell(true, adjacentMineCounter);
             }
         }
 
@@ -86,7 +122,12 @@ class GameMap {
     void drawOnTerminal() {
         for(final Cell[] cellRow : cellMatrix) {
             for (final Cell cell : cellRow) {
-                System.out.print((cell instanceof MineCell) ? "X" : ".");
+                if (cell instanceof EmptyCell) {
+                    int mineCount = ((EmptyCell) cell).getAdjacentMineCount();
+                    System.out.print((mineCount == 0) ? "." : mineCount);
+                } else {
+                    System.out.print("X");
+                }
             }
             System.out.print("\n");
         }
@@ -94,13 +135,25 @@ class GameMap {
 
     void logDebugMessage() {
         for(final Cell[] cellRow : cellMatrix) {
+            for (final Cell cell : cellRow) {
+                System.out.print(cell);
+                System.out.print(" ");
+            }
+            System.out.println();
+        }
+
+        for(final Cell[] cellRow : cellMatrix) {
             System.out.print("{");
             for (final Cell cell : cellRow) {
 
                 System.out.print(" ");
                 System.out.print(cell.isRevealed() ? " " : "H");
                 System.out.print(" ");
-                System.out.print((cell instanceof MineCell) ? "M" : "[]");
+                if (cell instanceof EmptyCell) {
+                    System.out.print("[" + ((EmptyCell) cell).getAdjacentMineCount() + "]");
+                } else {
+                    System.out.print("M");
+                }
                 System.out.print("\t");
             }
             System.out.print("}\n");
